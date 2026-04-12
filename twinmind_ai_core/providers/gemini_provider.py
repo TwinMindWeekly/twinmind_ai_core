@@ -8,21 +8,21 @@ from .base import BaseProvider
 class GeminiProvider(BaseProvider):
     def __init__(self):
         super().__init__()
-        import google.generativeai as genai
+        from google import genai
+        from google.genai import types
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel(self.model_name)
+            self.client = genai.Client(api_key=self.api_key)
         else:
-            self.model = None
+            self.client = None
 
     def _empty_stream(self) -> Generator:
         yield ""
 
     def generate_text(self, system_prompt: str, user_prompt: str, stream: bool = False) -> Union[str, Generator]:
-        if not self.model:
+        if not self.client:
             print("[Gemini] Error: API Key is missing")
             return "" if not stream else self._empty_stream()
 
@@ -33,13 +33,14 @@ class GeminiProvider(BaseProvider):
             prompt += user_prompt
 
         try:
-            generation_config = {"temperature": 0.1, "top_p": 0.5}
+            from google.genai import types
+            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5)
             if stream:
-                response = self.model.generate_content(prompt, generation_config=generation_config, stream=True)
+                response = self.client.models.generate_content_stream(model=self.model_name, contents=prompt, config=generation_config)
                 self.request_count += 1
                 return self._handle_stream(response)
             else:
-                response = self.model.generate_content(prompt, generation_config=generation_config)
+                response = self.client.models.generate_content(model=self.model_name, contents=prompt, config=generation_config)
                 self.request_count += 1
                 return response.text.strip()
         except Exception as e:
@@ -56,7 +57,7 @@ class GeminiProvider(BaseProvider):
             yield ""
 
     def generate_vision(self, system_prompt: str, user_prompt: str, image_np: np.ndarray) -> str:
-        if image_np is None or image_np.size == 0 or not self.model:
+        if image_np is None or image_np.size == 0 or not self.client:
             return ""
             
         prompt = ""
@@ -69,8 +70,9 @@ class GeminiProvider(BaseProvider):
             img_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
             pil_img = Image.fromarray(img_rgb)
             
-            generation_config = {"temperature": 0.1, "top_p": 0.5}
-            response = self.model.generate_content([prompt, pil_img], generation_config=generation_config)
+            from google.genai import types
+            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5)
+            response = self.client.models.generate_content(model=self.model_name, contents=[prompt, pil_img], config=generation_config)
             self.request_count += 1
             return response.text.strip()
         except Exception as e:

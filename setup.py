@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests",
-        "google-generativeai",
+        "google-genai",
         "python-dotenv",
         "numpy",
         "opencv-python-headless",
