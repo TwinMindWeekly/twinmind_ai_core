@@ -34,7 +34,13 @@ class GeminiProvider(BaseProvider):
 
         try:
             from google.genai import types
-            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5)
+            safety_settings = [
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE)
+            ]
+            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5, safety_settings=safety_settings)
             if stream:
                 response = self.client.models.generate_content_stream(model=self.model_name, contents=prompt, config=generation_config)
                 self.request_count += 1
@@ -71,7 +77,13 @@ class GeminiProvider(BaseProvider):
             pil_img = Image.fromarray(img_rgb)
             
             from google.genai import types
-            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5)
+            safety_settings = [
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE)
+            ]
+            generation_config = types.GenerateContentConfig(temperature=0.1, top_p=0.5, safety_settings=safety_settings)
             response = self.client.models.generate_content(model=self.model_name, contents=[prompt, pil_img], config=generation_config)
             self.request_count += 1
             return response.text.strip()
