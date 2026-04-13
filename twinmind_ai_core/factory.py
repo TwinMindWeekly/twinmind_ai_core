@@ -4,6 +4,7 @@ from .providers.gemini_provider import GeminiProvider
 from .providers.groq_provider import GroqProvider
 from .providers.sambanova_provider import SambaNovaProvider
 from .providers.ollama_provider import OllamaProvider
+from .providers.local_provider import LocalProvider
 from .fallback import AutoFallbackProvider
 
 class AIProviderFactory:
@@ -22,5 +23,7 @@ class AIProviderFactory:
             return GroqProvider()
         elif provider_name == "sambanova":
             return SambaNovaProvider()
+        elif provider_name == "local":
+            return LocalProvider()
         else:
             return OllamaProvider()
